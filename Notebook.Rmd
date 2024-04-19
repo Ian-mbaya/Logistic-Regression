@@ -1,0 +1,99 @@
+---
+title: "Final Project Notebook"
+author: "Ian Mbaya"
+date: "2024-03-12"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+```{r}
+library('tidyverse')
+library('tidymodels')
+```
+```{r}
+
+```
+
+```{r}
+library(caret)
+```
+
+```{r load-data}
+attacks <- read.csv("data/CTU2.csv", sep = "|")
+glimpse(attacks)
+```
+# Breakdown the data into 8 folds
+
+```{r skim-data}
+skimr::skim(attacks)
+```
+# Correlation Matrix
+```{r}
+# Compute the correlation matrix
+correlation_matrix <- cor(attacks)
+
+# Print the correlation matrix
+print(correlation_matrix)
+
+```
+
+
+# Generate random indices for splitting
+split_indices <- sample(1:num_splits, size = nrow(attacks), replace = TRUE)
+
+# Split the dataset into multiple datasets
+split_datasets <- split(attacks, split_indices)
+```
+```{r}
+# Set the number of splits
+num_splits <- 8
+
+# Calculate the approximate number of records in each split
+records_per_split <- ceiling(nrow(attacks) / num_splits)
+
+# Initialize variables
+split_indices <- rep(NA, nrow(attacks))
+current_index <- 1
+
+# Generate split indices
+for (i in 1:num_splits) {
+  if (i == num_splits) {
+    split_indices[current_index:nrow(your_dataset)] <- i
+  } else {
+    split_indices[current_index:(current_index + records_per_split - 1)] <- i
+  }
+  current_index <- current_index + records_per_split
+}
+
+# Shuffle the split indices
+split_indices <- sample(split_indices)
+
+# Split the dataset into multiple datasets
+split_datasets <- split(your_dataset, split_indices)
+
+# You can access each split dataset using names or indices
+for (i in seq_along(split_datasets)) {
+  # Save each split dataset to a separate file if needed
+  write.csv(split_datasets[[i]], file = paste0("split_dataset_", i, ".csv"), row.names = FALSE)
+}
+
+```
+
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
