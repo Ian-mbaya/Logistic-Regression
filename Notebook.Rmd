@@ -1,33 +1,39 @@
----
-title: "Final Project Notebook"
-author: "Ian Mbaya"
-date: "2024-03-12"
-output: html_document
----
+------------------------------------------------------------------------
+
+title: "Final Project Notebook" author: "Ian Mbaya" date: "2024-03-12" output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## Load the Neccessary Libraries
-```{r L}
+
+```{r Load-libraries}
 library('tidyverse')
 library('tidymodels')
 library('caret')
 library('pROC')
+library('lubridate')
+
 ```
 
-# Loading the Data 
+# Loading the Data
+
 ```{r load-data}
-attacks <- read.csv("data/CTU2.csv", sep = "|")
+attacks <- read.csv("data/CTU1.csv", sep = "|")
+subset <- read.csv("data/CTU2.csv", sep = "|")
 ```
 
 # Explalatory Data Analysis
+
 ## Take a Glimpse of the Data
+
 ```{r}
-glimpse(attacks)
+dplyr::glimpse(attacks)
 ```
+
 ## Create a Data Dictionary
+
 ```{r}
 # Data Dictionary for Network Connection Data
 data_dictionary <- tibble::tribble(
@@ -57,31 +63,87 @@ data_dictionary <- tibble::tribble(
   "detailed_label","A more detailed description or label for the connection.", "string"
 )
 
-# Print the data dictionary
-print(data_dictionary)
 
 ```
 
-
 ## Checking for Missing Values
+
 ```{r skim-data}
 skimr::skim(attacks)
 ```
+
 # Data Summary
+
 ```{r}
 summary(attacks)
 ```
-From the summary above it seems  like we might have too many variables that may not be  contributing to the model. In the following steps we will be reducing dimensionality  by removing someof the columns
+
+From the summary above it seems like we might have too many variables that may not be contributing to the model. In the following steps we will be reducing dimensionality by removing someof the columns.
+
+```{r}
+
+# Check the structure of the DataFrame
+str(attacks)
+
+```
+
+```{r}
+# Count the number of occurrences for each level of the 'label' variable
+label_counts <- table(attacks$label)
+
+# Print the counts
+print(label_counts)
+
+```
+
+## Data Processing, Feature Engineering, and Exploration
+
+## ###Correlation Analysis
+
+```{r}
+
+# Check the levels of the label variable
+levels(attacks$label)
+
+# Convert label to a factor if it's not already
+attacks$label <- as.factor(attacks$label)
+
+# Calculate correlation using Cramér's V for categorical variables
+cramer_v <- function(x, y) {
+  confusion_matrix <- table(x, y)
+  n <- sum(confusion_matrix)
+  chi_sq <- chisq.test(confusion_matrix)$statistic
+  return(sqrt(chi_sq / (n * (min(nrow(confusion_matrix), ncol(confusion_matrix)) - 1))))
+}
+
+# Calculate correlation between label and each categorical variable
+correlation_results <- lapply(attacks[, -which(names(attacks) == "label")], cramer_v, y = attacks$label)
+
+# Convert the results to a data frame
+correlation_df <- data.frame(
+  variable = names(correlation_results),
+  correlation = unlist(correlation_results)
+)
+
+# Visualize correlation
+ggplot(correlation_df, aes(x = reorder(variable, correlation), y = correlation)) +
+  geom_bar(stat = "identity", fill = "skyblue", color = "black") +
+  coord_flip() +
+  labs(x = "Variable", y = "Correlation (Cramér's V)",
+       title = "Correlation between Variables and Label") +
+  theme_minimal()
+
+```
+
+
 ## Dimensionality Reduction
+
 ```{r}
 # Removing some of the less  important variables from the data 
 data1 <- select(attacks, 
-                        label, ts,
-                        id.orig_h, id.resp_h, 
-                        id.orig_p, id.resp_p, 
-                        proto, 
-                        conn_state, duration, 
-                        resp_ip_bytes, orig_ip_bytes)
+                        label, ts, 
+                        id.resp_h, id.resp_p, id.orig_p,
+                        proto, history, orig_ip_bytes)
 
 # View the first few rows of the selected data
 summary(data1)
@@ -90,3 +152,235 @@ summary(data1)
 
 
 
+
+
+## Visualizing Pattern in Network Traffic based on Timestamps
+
+```{r}
+
+# Convert 'ts' to a DateTime object 
+data1$ts <- as.POSIXct(data1$ts, format = "%Y-%m-%d %H:%M:%S")  
+
+# Create a new dataframe with counts of attacks per time period (e.g., per day)
+attacks_per_period <- data1 %>%
+  group_by(ts = floor_date(ts, "day"), label) %>%  # group by day and label;  
+  summarise(count = n(), .groups = 'drop')  # count the number of rows (attacks) per group
+
+# Create the time series plot
+ggplot(attacks_per_period, aes(x = ts, y = count, group = label, color = label)) +
+  geom_line() +  
+  labs(title = "Time Series of Attacks", x = "Time", y = "Count of Attacks", color = "Label") +
+  theme_minimal() +
+  scale_x_datetime(date_breaks = "1 day", date_labels = "%b %d")  
+
+```
+```{r}
+
+# Load necessary libraries
+library(ggplot2)
+
+# Calculate the 99th percentile to identify the 1% threshold
+percentile_99 <- quantile(attacks$orig_ip_bytes, probs = 0.99)
+
+# Create a density plot with a more focused x-axis limit
+ggplot(attacks, aes(x = orig_ip_bytes, fill = label)) +
+  geom_density(alpha = 0.5, trim = TRUE) +  # Trim the density to limit the plot
+  labs(x = "Number of Bytes Sent from Origin",
+       y = "Density",
+       title = "Density Plot of Number of Bytes Sent from Origin by Label") +
+  scale_fill_manual(values = c("#1f78b4", "#33a02c")) +  # Custom colors for the fill
+  theme_minimal() +
+  xlim(c(0, max(180, percentile_99)))  # Set x-axis limits to highlight the 1% tail
+
+```
+
+
+## Exploring The Categorical Variables
+```{r}
+# Load necessary library for data manipulation
+library(dplyr)
+library(knitr)
+
+# Determine the number of unique values for each variable
+num_unique_history <- attacks %>% select(history) %>% n_distinct()
+num_unique_id_resp_p <- attacks %>% select(id.resp_p) %>% n_distinct()
+num_unique_id_resp_h <- attacks %>% select(id.resp_h) %>% n_distinct()
+num_unique_id_orig_h <- attacks %>% select(id.orig_p) %>% n_distinct()
+num_unique_proto <- attacks %>% select(proto) %>% n_distinct()
+
+# Create a data frame to store the results
+unique_values_df <- data.frame(
+  variable = c("id.resp_p", "id.resp_h", "id.orig_p", "proto", "history"),
+  unique_values = c(num_unique_id_resp_p, num_unique_id_resp_h, num_unique_id_orig_h, num_unique_proto, num_unique_history)
+)
+
+# Use kable for presentation
+kable(unique_values_df, caption = "Number of Unique Values in Each Variable")
+
+```
+```{r}
+# Load necessary libraries
+library(wordcloud)
+
+# Filter out "unknown" values
+attacks_filtered <- subset(attacks, history != "unknown")
+
+# Create separate datasets for malicious and benign
+malicious_data <- subset(attacks_filtered, label == "Malicious")
+benign_data <- subset(attacks_filtered, label == "Benign")
+
+# Create word cloud for malicious data
+wordcloud(malicious_data$history, scale=c(5,0.5), min.freq = 10, random.order=FALSE, colors=brewer.pal(8, "Dark2"), main="Malicious")
+
+# Create word cloud for benign data
+wordcloud(benign_data$history, scale=c(5,0.5), min.freq = 10, random.order=FALSE, colors=brewer.pal(8, "Dark2"), main="Benign")
+
+```
+
+
+
+
+##Visualizing Three Categorical Variables on a Barchart
+
+```{r categorical-viz}
+# Ensure all varaibales are factors
+attacks$label <- as.factor(attacks$label)
+attacks$proto <- as.factor(attacks$proto)
+
+# Plot1 Protocols
+ggplot(data = attacks, aes(x = proto, fill = label)) +
+  geom_bar(position = "dodge") +
+  labs(title = "Distribution of Labels across Protocols",
+       x = "Protocols",
+       y = "Count") +
+  scale_fill_brewer(palette = "Set1")  
+
+```
+
+
+## Separating Data into Train and Test
+
+```{r train-test}
+# Create a data partition
+set.seed(5774)  
+trainIndex <- createDataPartition(data1$label, p = 0.7, list = FALSE, times = 1)
+
+# Create training and test datasets
+train <- data1[trainIndex, ]
+test <- data1[-trainIndex, ]
+
+# Viewing the dimensions of the train and test sets
+dim(train)
+dim(test)
+
+```
+
+## Logistic Regression Model
+Logistic regression is one form of a *generalized linear model*.
+For this type of model, the outcome/response variable takes one one of two levels (sometimes called a binary variable or a two-level categorical variable).
+
+In our activity, $Y_i$ takes the value 1 if a résumé receives a callback and 0 if it did not.
+Generally, we will let the probability of a "success" (a 1) be $p_i$ and the probability of a "failure" (a 0) be $1 - p_i$.
+Therefore, the odds of a "success" are:
+
+$$
+\frac{Pr(Y_i = 1)}{Pr(Y_i = 0)} = \frac{p_i}{1-p_i}
+$$
+
+From your reading, you saw that we use the *logit function* (or *log odds*) to model binary outcome variables:
+
+$$
+\begin{equation*}
+\log\left(\frac{p_i}{1-p_i}\right) = \beta_0 + \beta_1 X
+\end{equation*}
+$$
+  Replace "verbatim" with "r" before the code chunk title to produce the logistic model output.
+
+```{r logistic-model}
+
+# Running a logistic regression model with received_callback as the response variable
+# and years_experience, race, and gender as explanatory variables
+
+mult_log_mod <- glm(label ~ orig_ip_bytes + proto, 
+                      data = train, 
+                      family = binomial)
+
+# Displaying the summary of the model
+tidy(mult_log_mod)
+
+```
+
+
+## Cross Validation
+
+```{r}
+# Load necessary libraries
+library(caret)
+library(pROC)
+
+# Assuming your dataset is named 'train'
+# Create 10-fold cross-validation sets
+set.seed(123) # for reproducibility
+folds <- createFolds(train$label, k = 10)
+
+# Function to perform cross-validation and compute AUC for each fold
+cv_roc_auc <- function(train_data, folds) {
+  auc_list <- c()
+  
+  for(i in 1:length(folds)) {
+    # Splitting data into training and test sets
+    test_indices <- folds[[i]]
+    train_indices <- setdiff(seq_len(nrow(train_data)), test_indices)
+    
+    train_fold <- train_data[train_indices, ]
+    test_fold <- train_data[test_indices, ]
+    
+    # Fit the model on the training set
+    glm_model <- glm(label ~ orig_ip_bytes + proto, data = train_fold, family = binomial)
+    
+    # Predict probabilities on the test set
+    prob_predictions <- predict(glm_model, newdata = test_fold, type = "response")
+    
+    # Compute ROC AUC
+    roc_curve <- roc(test_fold$label, prob_predictions)
+    auc_value <- auc(roc_curve)
+    auc_list <- c(auc_list, auc_value)
+  }
+  
+  return(auc_list)
+}
+
+# Perform cross-validation and compute AUC
+auc_results <- cv_roc_auc(train, folds)
+
+# Calculate the mean AUC from all folds
+mean_auc <- mean(auc_results)
+
+# Output the results
+print(paste("Mean AUC from cross-validation:", mean_auc))
+
+```
+
+```{r}
+# Load necessary library
+library(pROC)
+
+# Assuming you have a logistic regression model fitted on your data
+# Let's say your model is stored in a variable called 'mult_log_mod'
+# and you have a validation dataset called 'validation'
+
+# First, predict the probabilities on the validation set
+prob_predictions <- predict(mult_log_mod, newdata = test, type = "response")
+
+# Generate the ROC object
+roc_obj <- roc(test$label, prob_predictions)
+
+# Plot the ROC curve
+plot(roc_obj, main = "ROC Curve", col = "#1c61b6", lwd = 2)
+# Add AUC to the plot
+auc(roc_obj)
+
+```
+
+
+## Results and Model Intepretation
