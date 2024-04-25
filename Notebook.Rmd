@@ -2,7 +2,7 @@
 title: "Logistic Regression  Project"
 author: "Ian Mbaya"
 date: "2024-04-25"
-output: pdf_document
+output: word_document
 ---
 
 ```{r setup, include=FALSE}
@@ -388,7 +388,7 @@ print(paste("Mean AUC from cross-validation:", mean_auc))
 ```
 
 ### ROC Curve
-```{r}
+```{r roc}
 # First, predict the probabilities on the validation set (Split Test Data)
 prob_predictions <- predict(mult_log_mod, newdata = test, type = "response")
 

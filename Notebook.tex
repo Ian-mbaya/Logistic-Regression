@@ -164,7 +164,7 @@ Libraries}\label{load-the-neccessary-libraries}}
 ## x dplyr::lag()      masks stats::lag()
 ## x yardstick::spec() masks readr::spec()
 ## x recipes::step()   masks stats::step()
-## * Use tidymodels_prefer() to resolve common conflicts.
+## * Learn how to get started at https://www.tidymodels.org/start/
 \end{verbatim}
 
 \begin{Shaded}
@@ -552,7 +552,13 @@ highest corellation with network traffic label.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{Notebook_files/figure-latex/unnamed-chunk-4-1.pdf}
+\includegraphics{Notebook_files/figure-latex/unnamed-chunk-4-1.pdf} In
+the first iteration there were 23 variables, I opted to remove all the
+variables that had a correlation of less than 0.75 and columns that had
+all values set to ``-'' the placeholder for missing. This alllowed me to
+save on time and space when running the models and also allowed me to
+upload the Project to GitHub without getting the error file is too
+large.
 
 \hypertarget{visualizing-pattern-in-network-traffic-based-on-timestamps}{%
 \subsection{Visualizing Pattern in Network Traffic based on
@@ -577,7 +583,10 @@ Timestamps}\label{visualizing-pattern-in-network-traffic-based-on-timestamps}}
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{Notebook_files/figure-latex/unnamed-chunk-5-1.pdf}
+\includegraphics{Notebook_files/figure-latex/unnamed-chunk-5-1.pdf} The
+line charts shows that both Malicious and Benign attacks follow the same
+pattern. Although the data shows that there are more malicious requests
+in this particular data set.
 
 \hypertarget{visualizing-the-number-of-bytes-sent-from-origin}{%
 \subsection{Visualizing the Number of Bytes Sent from
@@ -604,7 +613,10 @@ Origin}\label{visualizing-the-number-of-bytes-sent-from-origin}}
 ## Warning: Removed 9585 rows containing non-finite values (`stat_density()`).
 \end{verbatim}
 
-\includegraphics{Notebook_files/figure-latex/unnamed-chunk-6-1.pdf}
+\includegraphics{Notebook_files/figure-latex/unnamed-chunk-6-1.pdf} The
+density charts shows that request that send over 60 bytes from the
+origin Ip address tend to be mostly malicious. Most benign requests send
+less than 50 bytesfrom the origin IP.
 
 \hypertarget{exploring-the-categorical-variables-history-id.resp_p-id.resp_p-id.resp_h-id.resp_p-proto-all-have-high-correaltions-with-label}{%
 \subsection{Exploring the Categorical Variables History, ID.Resp\_p,
@@ -649,6 +661,15 @@ proto & 3 \\
 history & 126 \\
 \bottomrule()
 \end{longtable}
+
+Of the FIVE categorical models picked from the first iteration (cor
+\textgreater{} 0.75 and non missing) only one (protocol) seem to be
+appropriate for linear regression model. The destination and origin (IP
+addresses and Ports), and network history have very large dimensionality
+so they can only be fit into a regression model after rigorous stemming
+and lemitization that I did not have the resources to implement. However
+I opted to use wordcloud to visualize how the different values of
+history appear in the dataset.
 
 \#\#Visualizing The Categorical Variables History with a WordCloud
 
@@ -708,7 +729,10 @@ history & 126 \\
 ## drops documents
 \end{verbatim}
 
-\includegraphics{Notebook_files/figure-latex/unnamed-chunk-8-2.pdf}
+\includegraphics{Notebook_files/figure-latex/unnamed-chunk-8-2.pdf} The
+two worldclouds confirm my intial sentiments with the history
+``haddaaff'' dominating benign request and all the other states in the
+malicious set.
 
 \#\#Visualizing The Protocols Values on a Barchart
 
@@ -728,7 +752,9 @@ history & 126 \\
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{Notebook_files/figure-latex/categorical-viz-1.pdf}
+\includegraphics{Notebook_files/figure-latex/categorical-viz-1.pdf} The
+Data appaers to be very skewed with most of the malicious attacks
+concentrated in the tcp protocol and benign attacks in the udp protocol.
 
 \hypertarget{dimensionality-reduction}{%
 \subsection{Dimensionality Reduction}\label{dimensionality-reduction}}
@@ -850,7 +876,7 @@ is malicious or benign. The base equation for this model is
 
 \[
 \begin{equation*}
-\log\left(\frac{p_i}{1-p_i}\right) = \beta_0 + \beta_1 \times orig\_ip\_bytes + \beta_3 \times proto
+\log\left(\frac{p_i}{1-p_i}\right) = \beta_0 + \beta_1 \times orig\_ip\_bytes + \beta_2 \times proto
 \end{equation*}
 \]\\
 
@@ -886,27 +912,49 @@ is malicious or benign. The base equation for this model is
 
 \[
 \begin{equation*}
-\log\left(\frac{p_i}{1-p_i}\right) = \beta_0 + \beta_1 \times orig\_ip\_bytes + \beta_3 \times proto
+\log\left(\frac{p_i}{1-p_i}\right) = \ -17.66528932 + \ 0.00112571 \times orig\_ip\_bytes 
 \end{equation*}
 \]\\
+
+\begin{quote}
+Intercept (β0): −17.66528932 represents the log odds of the outcome when
+all predictors are at their reference level O bytes sent sent and icmp
+protocol. Coefficient for orig\_ip\_bytes (β1): The coefficient
+0.00112571, indicates the amount of change in the log odds of the
+outcome for a one-unit increase in `orig\_ip\_bytes'.
+\end{quote}
 
 \hypertarget{equation-for-tcp}{%
 \subsubsection{Equation for TCP}\label{equation-for-tcp}}
 
 \[
 \begin{equation*}
-\log\left(\frac{p_i}{1-p_i}\right) = \beta_0 + \beta_1 \times orig\_ip\_bytes + \beta_3 \times proto
+\log\left(\frac{p_i}{1-p_i}\right) = \ -17.66528932 + \ 0.00112571 \times orig\_ip\_bytes + \ 8.19231031 \times prototcp
 \end{equation*}
-\]
+\]\\
+
+\begin{quote}
+Coefficient for prototcp is 8.19231031 this tells us that when the
+protocol is TCP (as opposed to ICMP), the likelihood of a malicious is
+8.19231031 units higher than when the protocol is ICMP, while holding
+bytes sent from origin constant.
+\end{quote}
 
 \hypertarget{equation-for-udp}{%
 \subsubsection{Equation for UDP}\label{equation-for-udp}}
 
 \[
 \begin{equation*}
-\log\left(\frac{p_i}{1-p_i}\right) = \beta_0 + \beta_1 \times orig\_ip\_bytes + \beta_3 \times proto
+\log\left(\frac{p_i}{1-p_i}\right) = \ -17.66528932 + \ 0.00112571 \times orig\_ip\_bytes + \ 20.06098491 \times protoudp
 \end{equation*}
-\]
+\]\\
+
+\begin{quote}
+Coefficient for prototcp is 20.06098491 this tells us that when the
+protocol is TCP (as opposed to ICMP), the likelihood of a malicious is
+20.06098491 units higher than when the protocol is ICMP, while holding
+bytes sent from origin constant.
+\end{quote}
 
 \hypertarget{cross-validation}{%
 \subsubsection{Cross Validation}\label{cross-validation}}
@@ -1087,5 +1135,23 @@ is malicious or benign. The base equation for this model is
 \hypertarget{conlusions-and-reccommenadtions}{%
 \subsection{Conlusions and
 Reccommenadtions}\label{conlusions-and-reccommenadtions}}
+
+AUC is approximately 0.954, which is very close to 1, indicating that
+the model has excellent discriminative ability to distinguish between
+the malicious and benign requests.
+
+However this result should be taken with a grain of salt since the data
+is higly skewed with majority of Malicious attacks concentrated in the
+TCP protocol while a majority of benign attacks in the udp protocol.
+
+A better approach to determine the efficiency of this model would be to
+use a more balanced dataset that distributes requests across the
+protocols. Further effort to lemitize and stem the IP addresses, Ports,
+History(Connections) would also help in providing more insightful
+patterns on network traffic and improving the models efficiency.
+
+Also different approaches to discriminant analysis (instead of the
+cramer's correlation) and clustering (instead of logistic regression)
+would have probably yielded different results.
 
 \end{document}
