@@ -20,8 +20,8 @@ library('lubridate')
 # Loading the Data
 
 ```{r load-data}
-attacks <- read.csv("data/CTU1.csv", sep = "|")
-subset <- read.csv("data/CTU2.csv", sep = "|")
+attacks <- read.csv("data/CTU2.csv", sep = "|")
+#subset <- read.csv("data/CTU2.csv", sep = "|")
 ```
 
 # Explalatory Data Analysis
