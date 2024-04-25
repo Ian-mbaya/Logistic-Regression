@@ -108,14 +108,14 @@
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
 \urlstyle{same} % disable monospaced font for URLs
 \hypersetup{
-  pdftitle={Final Project Notebook},
+  pdftitle={Logistic Regression Project},
   pdfauthor={Ian Mbaya},
   hidelinks,
   pdfcreator={LaTeX via pandoc}}
 
-\title{Final Project Notebook}
+\title{Logistic Regression Project}
 \author{Ian Mbaya}
-\date{2024-03-12}
+\date{2024-04-25}
 
 \begin{document}
 \maketitle
@@ -164,7 +164,7 @@ Libraries}\label{load-the-neccessary-libraries}}
 ## x dplyr::lag()      masks stats::lag()
 ## x yardstick::spec() masks readr::spec()
 ## x recipes::step()   masks stats::step()
-## * Search for functions across packages at https://www.tidymodels.org/find/
+## * Use tidymodels_prefer() to resolve common conflicts.
 \end{verbatim}
 
 \begin{Shaded}
@@ -206,20 +206,28 @@ Libraries}\label{load-the-neccessary-libraries}}
 \begin{Shaded}
 \begin{Highlighting}[]
 \FunctionTok{library}\NormalTok{(}\StringTok{\textquotesingle{}lubridate\textquotesingle{}}\NormalTok{)}
+\FunctionTok{library}\NormalTok{(}\StringTok{\textquotesingle{}writexl\textquotesingle{}}\NormalTok{)}
+\FunctionTok{library}\NormalTok{(}\StringTok{\textquotesingle{}knitr\textquotesingle{}}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
 \hypertarget{loading-the-data}{%
 \section{Loading the Data}\label{loading-the-data}}
 
+\hypertarget{i-am-using-data1-because-of-size-constraints.-the-original-file-was-too-big-for-github}{%
+\subsection{I am using data1 because of size constraints. The original
+file was too big for
+github}\label{i-am-using-data1-because-of-size-constraints.-the-original-file-was-too-big-for-github}}
+
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{attacks }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\StringTok{"data/CTU2.csv"}\NormalTok{, }\AttributeTok{sep =} \StringTok{"|"}\NormalTok{)}
+\CommentTok{\#attacks \textless{}{-} read.csv("data/CTU1.csv", sep = "|") Deleted File}
+\NormalTok{attacks }\OtherTok{\textless{}{-}}\NormalTok{ readxl}\SpecialCharTok{::}\FunctionTok{read\_xlsx}\NormalTok{(}\StringTok{"data/data1.xlsx"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{explalatory-data-analysis}{%
-\section{Explalatory Data Analysis}\label{explalatory-data-analysis}}
+\hypertarget{preliminary-data-analysis}{%
+\section{Preliminary Data Analysis}\label{preliminary-data-analysis}}
 
 \hypertarget{take-a-glimpse-of-the-data}{%
 \subsection{Take a Glimpse of the
@@ -227,37 +235,202 @@ Data}\label{take-a-glimpse-of-the-data}}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\FunctionTok{glimpse}\NormalTok{(attacks)}
+\NormalTok{dplyr}\SpecialCharTok{::}\FunctionTok{glimpse}\NormalTok{(attacks)}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{verbatim}
-## Rows: 156,103
-## Columns: 23
-## $ ts             <dbl> 1526756262, 1526756269, 1526756273, 1526756280, 1526756~
-## $ uid            <chr> "C9YvmJ3zxtuqxWxLW5", "CGsZqZ3UiQexLzPRVb", "C0LkBW2VEa~
-## $ id.orig_h      <chr> "192.168.2.5", "192.168.2.5", "192.168.2.5", "192.168.2~
-## $ id.orig_p      <dbl> 38792, 38792, 38793, 38793, 38794, 38794, 38795, 38795,~
-## $ id.resp_h      <chr> "200.168.87.203", "200.168.87.203", "200.168.87.203", "~
-## $ id.resp_p      <dbl> 59353, 59353, 59353, 59353, 59353, 59353, 59353, 59353,~
-## $ proto          <chr> "tcp", "tcp", "tcp", "tcp", "tcp", "tcp", "tcp", "tcp",~
-## $ service        <chr> "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", ~
-## $ duration       <chr> "2.998333", "-", "2.997182", "-", "2.996286", "-", "2.9~
-## $ orig_bytes     <chr> "0", "-", "0", "-", "0", "-", "0", "-", "0", "-", "0", ~
-## $ resp_bytes     <chr> "0", "-", "0", "-", "0", "-", "0", "-", "0", "-", "0", ~
-## $ conn_state     <chr> "S0", "S0", "S0", "S0", "S0", "S0", "S0", "S0", "S0", "~
-## $ local_orig     <chr> "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", ~
-## $ local_resp     <chr> "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", ~
-## $ missed_bytes   <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0~
-## $ history        <chr> "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", ~
-## $ orig_pkts      <dbl> 3, 1, 3, 1, 3, 1, 3, 1, 3, 1, 3, 1, 3, 1, 6, 6, 1, 3, 1~
-## $ orig_ip_bytes  <dbl> 180, 60, 180, 60, 180, 60, 180, 60, 180, 60, 180, 60, 1~
-## $ resp_pkts      <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 6, 6, 0, 0, 0~
-## $ resp_ip_bytes  <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 76, 456, 456, 0,~
-## $ tunnel_parents <chr> "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", ~
-## $ label          <chr> "Malicious", "Malicious", "Malicious", "Malicious", "Ma~
-## $ detailed.label <chr> "PartOfAHorizontalPortScan", "PartOfAHorizontalPortScan~
+## Rows: 1,008,748
+## Columns: 8
+## $ label         <chr> "Malicious", "Malicious", "Malicious", "Malicious", "Mal~
+## $ ts            <dttm> 2018-05-09 15:30:31, 2018-05-09 15:30:31, 2018-05-09 15~
+## $ id.resp_h     <chr> "65.127.233.163", "63.150.16.171", "111.40.23.49", "131.~
+## $ id.resp_p     <dbl> 23, 23, 23, 23, 23, 23, 49560, 21288, 23, 8080, 8080, 23~
+## $ id.orig_p     <dbl> 51524, 56305, 41101, 60905, 44301, 50244, 34243, 34840, ~
+## $ proto         <chr> "tcp", "tcp", "tcp", "tcp", "tcp", "tcp", "tcp", "tcp", ~
+## $ history       <chr> "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "~
+## $ orig_ip_bytes <dbl> 180, 60, 60, 180, 60, 60, 180, 60, 60, 60, 60, 180, 180,~
 \end{verbatim}
+
+\hypertarget{data-summary}{%
+\subsection{Data Summary}\label{data-summary}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{summary}\NormalTok{(attacks)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##     label                 ts                          id.resp_h        
+##  Length:1008748     Min.   :2018-05-09 15:30:31.01   Length:1008748    
+##  Class :character   1st Qu.:2018-05-10 17:57:40.75   Class :character  
+##  Mode  :character   Median :2018-05-11 20:40:00.00   Mode  :character  
+##                     Mean   :2018-05-11 21:43:27.22                     
+##                     3rd Qu.:2018-05-13 01:13:40.00                     
+##                     Max.   :2018-05-14 07:24:43.02                     
+##    id.resp_p       id.orig_p        proto             history         
+##  Min.   :    0   Min.   :    3   Length:1008748     Length:1008748    
+##  1st Qu.:   23   1st Qu.:43730   Class :character   Class :character  
+##  Median : 8080   Median :43763   Mode  :character   Mode  :character  
+##  Mean   :16098   Mean   :44437                                        
+##  3rd Qu.:28180   3rd Qu.:48814                                        
+##  Max.   :65535   Max.   :65394                                        
+##  orig_ip_bytes    
+##  Min.   :   0.00  
+##  1st Qu.:  40.00  
+##  Median :  60.00  
+##  Mean   :  81.15  
+##  3rd Qu.:  60.00  
+##  Max.   :2990.00
+\end{verbatim}
+
+\hypertarget{checking-for-missing-values}{%
+\subsection{Checking for Missing
+Values}\label{checking-for-missing-values}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{skimr}\SpecialCharTok{::}\FunctionTok{skim}\NormalTok{(attacks)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{longtable}[]{@{}ll@{}}
+\caption{Data summary}\tabularnewline
+\toprule()
+\endhead
+Name & attacks \\
+Number of rows & 1008748 \\
+Number of columns & 8 \\
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ & \\
+Column type frequency: & \\
+character & 4 \\
+numeric & 3 \\
+POSIXct & 1 \\
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ & \\
+Group variables & None \\
+\bottomrule()
+\end{longtable}
+
+\textbf{Variable type: character}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1944}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1389}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1944}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.0556}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.0556}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.0833}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1250}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1528}}@{}}
+\toprule()
+\begin{minipage}[b]{\linewidth}\raggedright
+skim\_variable
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+n\_missing
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+complete\_rate
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+min
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+max
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+empty
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+n\_unique
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+whitespace
+\end{minipage} \\
+\midrule()
+\endhead
+label & 0 & 1 & 6 & 9 & 0 & 2 & 0 \\
+id.resp\_h & 0 & 1 & 7 & 15 & 0 & 597107 & 0 \\
+proto & 0 & 1 & 3 & 4 & 0 & 3 & 0 \\
+history & 0 & 1 & 1 & 10 & 0 & 126 & 0 \\
+\bottomrule()
+\end{longtable}
+
+\textbf{Variable type: numeric}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 20\tabcolsep) * \real{0.1522}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 20\tabcolsep) * \real{0.1087}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 20\tabcolsep) * \real{0.1522}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 20\tabcolsep) * \real{0.0978}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 20\tabcolsep) * \real{0.0978}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 20\tabcolsep) * \real{0.0326}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 20\tabcolsep) * \real{0.0652}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 20\tabcolsep) * \real{0.0652}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 20\tabcolsep) * \real{0.0978}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 20\tabcolsep) * \real{0.0652}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 20\tabcolsep) * \real{0.0652}}@{}}
+\toprule()
+\begin{minipage}[b]{\linewidth}\raggedright
+skim\_variable
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+n\_missing
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+complete\_rate
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+mean
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+sd
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+p0
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+p25
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+p50
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+p75
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+p100
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+hist
+\end{minipage} \\
+\midrule()
+\endhead
+id.resp\_p & 0 & 1 & 16097.71 & 19562.80 & 0 & 23 & 8080 & 28180.25 &
+65535 & ▇▁▁▁▁ \\
+id.orig\_p & 0 & 1 & 44436.84 & 9660.59 & 3 & 43730 & 43763 & 48814.00 &
+65394 & ▁▁▂▇▂ \\
+orig\_ip\_bytes & 0 & 1 & 81.15 & 94.73 & 0 & 40 & 60 & 60.00 & 2990 &
+▇▁▁▁▁ \\
+\bottomrule()
+\end{longtable}
+
+\textbf{Variable type: POSIXct}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.1308}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.0935}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.1308}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.1869}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.1869}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.1869}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.0841}}@{}}
+\toprule()
+\begin{minipage}[b]{\linewidth}\raggedright
+skim\_variable
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+n\_missing
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+complete\_rate
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+min
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+max
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+median
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+n\_unique
+\end{minipage} \\
+\midrule()
+\endhead
+ts & 0 & 1 & 2018-05-09 15:30:31 & 2018-05-14 07:24:43 & 2018-05-11
+20:40:00 & 946455 \\
+\bottomrule()
+\end{longtable}
 
 \hypertarget{create-a-data-dictionary}{%
 \subsection{Create a Data Dictionary}\label{create-a-data-dictionary}}
@@ -291,263 +464,95 @@ Data}\label{take-a-glimpse-of-the-data}}
   \StringTok{"label"}\NormalTok{,         }\StringTok{"A label associated with the connection (e.g., \textquotesingle{}Malicious\textquotesingle{} or \textquotesingle{}Benign\textquotesingle{})."}\NormalTok{, }\StringTok{"string"}\NormalTok{,}
   \StringTok{"detailed\_label"}\NormalTok{,}\StringTok{"A more detailed description or label for the connection."}\NormalTok{, }\StringTok{"string"}
 \NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
 
-\CommentTok{\# Print the data dictionary}
-\FunctionTok{print}\NormalTok{(data\_dictionary)}
+From the summary and glimpse functions above it seems like we might have
+too many variables that may not be contributing to the model. While the
+skim functions shows that there are no missing values some of the
+variables have a dash has placeholder ``-''. In the following steps we
+will be further exploring and visualizing the data to identify trends
+and patterns in the data that will determine the most important
+variables for prediction.
+
+\hypertarget{data-processing-exploration-feature-engineering.}{%
+\section{Data Processing, Exploration Feature
+Engineering.}\label{data-processing-exploration-feature-engineering.}}
+
+\hypertarget{correlation-analysis}{%
+\subsection{Correlation Analysis}\label{correlation-analysis}}
+
+Running A Correlation Analysis to Identify the variables that have the
+highest corellation with network traffic label.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Check the levels of the label variable}
+\FunctionTok{levels}\NormalTok{(attacks}\SpecialCharTok{$}\NormalTok{label)}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{verbatim}
-## # A tibble: 23 x 3
-##    Field_Name Description                                                  Type 
-##    <chr>      <chr>                                                        <chr>
-##  1 ts         The timestamp of the connection event.                       time 
-##  2 uid        A unique identifier for the connection.                      stri~
-##  3 id.orig_h  The source IP address.                                       addr 
-##  4 id.orig_p  The source port.                                             port 
-##  5 id.resp_h  The destination IP address.                                  addr 
-##  6 id.resp_p  The destination port.                                        port 
-##  7 proto      The network protocol used (e.g., 'tcp').                     enum 
-##  8 service    The service associated with the connection.                  stri~
-##  9 duration   The duration of the connection.                              inte~
-## 10 orig_bytes The number of bytes sent from the source to the destination. count
-## # i 13 more rows
+## NULL
 \end{verbatim}
 
-\hypertarget{checking-for-missing-values}{%
-\subsection{Checking for Missing
-Values}\label{checking-for-missing-values}}
-
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{skimr}\SpecialCharTok{::}\FunctionTok{skim}\NormalTok{(attacks)}
-\end{Highlighting}
-\end{Shaded}
+\CommentTok{\# Convert label to a factor if it\textquotesingle{}s not already}
+\NormalTok{attacks}\SpecialCharTok{$}\NormalTok{label }\OtherTok{\textless{}{-}} \FunctionTok{as.factor}\NormalTok{(attacks}\SpecialCharTok{$}\NormalTok{label)}
 
-\begin{longtable}[]{@{}ll@{}}
-\caption{Data summary}\tabularnewline
-\toprule()
-\endhead
-Name & attacks \\
-Number of rows & 156103 \\
-Number of columns & 23 \\
-\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ & \\
-Column type frequency: & \\
-character & 15 \\
-numeric & 8 \\
-\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ & \\
-Group variables & None \\
-\bottomrule()
-\end{longtable}
+\CommentTok{\# Calculate correlation using Cramér\textquotesingle{}s V for categorical variables}
+\NormalTok{cramer\_v }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(x, y) \{}
+\NormalTok{  confusion\_matrix }\OtherTok{\textless{}{-}} \FunctionTok{table}\NormalTok{(x, y)}
+\NormalTok{  n }\OtherTok{\textless{}{-}} \FunctionTok{sum}\NormalTok{(confusion\_matrix)}
+\NormalTok{  chi\_sq }\OtherTok{\textless{}{-}} \FunctionTok{chisq.test}\NormalTok{(confusion\_matrix)}\SpecialCharTok{$}\NormalTok{statistic}
+  \FunctionTok{return}\NormalTok{(}\FunctionTok{sqrt}\NormalTok{(chi\_sq }\SpecialCharTok{/}\NormalTok{ (n }\SpecialCharTok{*}\NormalTok{ (}\FunctionTok{min}\NormalTok{(}\FunctionTok{nrow}\NormalTok{(confusion\_matrix), }\FunctionTok{ncol}\NormalTok{(confusion\_matrix)) }\SpecialCharTok{{-}} \DecValTok{1}\NormalTok{))))}
+\NormalTok{\}}
 
-\textbf{Variable type: character}
-
-\begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.2055}}
-  >{\raggedleft\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1370}}
-  >{\raggedleft\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1918}}
-  >{\raggedleft\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.0548}}
-  >{\raggedleft\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.0548}}
-  >{\raggedleft\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.0822}}
-  >{\raggedleft\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1233}}
-  >{\raggedleft\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1507}}@{}}
-\toprule()
-\begin{minipage}[b]{\linewidth}\raggedright
-skim\_variable
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
-n\_missing
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
-complete\_rate
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
-min
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
-max
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
-empty
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
-n\_unique
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
-whitespace
-\end{minipage} \\
-\midrule()
-\endhead
-uid & 0 & 1 & 15 & 18 & 0 & 156103 & 0 \\
-id.orig\_h & 0 & 1 & 9 & 15 & 0 & 961 & 0 \\
-id.resp\_h & 0 & 1 & 9 & 15 & 0 & 64194 & 0 \\
-proto & 0 & 1 & 3 & 4 & 0 & 3 & 0 \\
-service & 0 & 1 & 1 & 4 & 0 & 5 & 0 \\
-duration & 0 & 1 & 1 & 12 & 0 & 20105 & 0 \\
-orig\_bytes & 0 & 1 & 1 & 4 & 0 & 48 & 0 \\
-resp\_bytes & 0 & 1 & 1 & 4 & 0 & 137 & 0 \\
-conn\_state & 0 & 1 & 2 & 5 & 0 & 11 & 0 \\
-local\_orig & 0 & 1 & 1 & 1 & 0 & 1 & 0 \\
-local\_resp & 0 & 1 & 1 & 1 & 0 & 1 & 0 \\
-history & 0 & 1 & 1 & 11 & 0 & 68 & 0 \\
-tunnel\_parents & 0 & 1 & 1 & 1 & 0 & 1 & 0 \\
-label & 0 & 1 & 6 & 9 & 0 & 2 & 0 \\
-detailed.label & 0 & 1 & 1 & 25 & 0 & 4 & 0 \\
-\bottomrule()
-\end{longtable}
-
-\textbf{Variable type: numeric}
-
-\begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 20\tabcolsep) * \real{0.1157}}
-  >{\raggedleft\arraybackslash}p{(\columnwidth - 20\tabcolsep) * \real{0.0826}}
-  >{\raggedleft\arraybackslash}p{(\columnwidth - 20\tabcolsep) * \real{0.1157}}
-  >{\raggedleft\arraybackslash}p{(\columnwidth - 20\tabcolsep) * \real{0.1074}}
-  >{\raggedleft\arraybackslash}p{(\columnwidth - 20\tabcolsep) * \real{0.0744}}
-  >{\raggedleft\arraybackslash}p{(\columnwidth - 20\tabcolsep) * \real{0.0909}}
-  >{\raggedleft\arraybackslash}p{(\columnwidth - 20\tabcolsep) * \real{0.0909}}
-  >{\raggedleft\arraybackslash}p{(\columnwidth - 20\tabcolsep) * \real{0.0909}}
-  >{\raggedleft\arraybackslash}p{(\columnwidth - 20\tabcolsep) * \real{0.0909}}
-  >{\raggedleft\arraybackslash}p{(\columnwidth - 20\tabcolsep) * \real{0.0909}}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 20\tabcolsep) * \real{0.0496}}@{}}
-\toprule()
-\begin{minipage}[b]{\linewidth}\raggedright
-skim\_variable
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
-n\_missing
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
-complete\_rate
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
-mean
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
-sd
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
-p0
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
-p25
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
-p50
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
-p75
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
-p100
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-hist
-\end{minipage} \\
-\midrule()
-\endhead
-ts & 0 & 1 & 1.526821e+09 & 37273.51 & 1526756240 & 1526788466 &
-1526822257 & 1526853001 & 1526886287 & ▇▇▇▇▇ \\
-id.orig\_p & 0 & 1 & 4.630844e+04 & 9667.61 & 3 & 39440 & 46810 & 53891
-& 61530 & ▁▁▃▇▇ \\
-id.resp\_p & 0 & 1 & 8.876350e+03 & 21140.31 & 0 & 22 & 22 & 22 & 59353
-& ▇▁▁▁▂ \\
-missed\_bytes & 0 & 1 & 0.000000e+00 & 0.00 & 0 & 0 & 0 & 0 & 0 &
-▁▁▇▁▁ \\
-orig\_pkts & 0 & 1 & 2.490000e+00 & 8.33 & 0 & 1 & 3 & 3 & 3031 &
-▇▁▁▁▁ \\
-orig\_ip\_bytes & 0 & 1 & 1.674000e+02 & 492.76 & 0 & 60 & 180 & 180 &
-164117 & ▇▁▁▁▁ \\
-resp\_pkts & 0 & 1 & 6.600000e-01 & 15.87 & 0 & 0 & 0 & 0 & 5975 &
-▇▁▁▁▁ \\
-resp\_ip\_bytes & 0 & 1 & 1.066000e+02 & 922.63 & 0 & 0 & 0 & 0 & 289732
-& ▇▁▁▁▁ \\
-\bottomrule()
-\end{longtable}
-
-\hypertarget{data-summary}{%
-\section{Data Summary}\label{data-summary}}
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\FunctionTok{summary}\NormalTok{(attacks)}
+\CommentTok{\# Calculate correlation between label and each categorical variable}
+\NormalTok{correlation\_results }\OtherTok{\textless{}{-}} \FunctionTok{lapply}\NormalTok{(attacks[, }\SpecialCharTok{{-}}\FunctionTok{which}\NormalTok{(}\FunctionTok{names}\NormalTok{(attacks) }\SpecialCharTok{==} \StringTok{"label"}\NormalTok{)], cramer\_v, }\AttributeTok{y =}\NormalTok{ attacks}\SpecialCharTok{$}\NormalTok{label)}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{verbatim}
-##        ts                uid             id.orig_h           id.orig_p    
-##  Min.   :1.527e+09   Length:156103      Length:156103      Min.   :    3  
-##  1st Qu.:1.527e+09   Class :character   Class :character   1st Qu.:39440  
-##  Median :1.527e+09   Mode  :character   Mode  :character   Median :46810  
-##  Mean   :1.527e+09                                         Mean   :46308  
-##  3rd Qu.:1.527e+09                                         3rd Qu.:53891  
-##  Max.   :1.527e+09                                         Max.   :61530  
-##   id.resp_h           id.resp_p        proto             service         
-##  Length:156103      Min.   :    0   Length:156103      Length:156103     
-##  Class :character   1st Qu.:   22   Class :character   Class :character  
-##  Mode  :character   Median :   22   Mode  :character   Mode  :character  
-##                     Mean   : 8876                                        
-##                     3rd Qu.:   22                                        
-##                     Max.   :59353                                        
-##    duration          orig_bytes         resp_bytes         conn_state       
-##  Length:156103      Length:156103      Length:156103      Length:156103     
-##  Class :character   Class :character   Class :character   Class :character  
-##  Mode  :character   Mode  :character   Mode  :character   Mode  :character  
-##                                                                             
-##                                                                             
-##                                                                             
-##   local_orig         local_resp         missed_bytes   history         
-##  Length:156103      Length:156103      Min.   :0     Length:156103     
-##  Class :character   Class :character   1st Qu.:0     Class :character  
-##  Mode  :character   Mode  :character   Median :0     Mode  :character  
-##                                        Mean   :0                       
-##                                        3rd Qu.:0                       
-##                                        Max.   :0                       
-##    orig_pkts        orig_ip_bytes        resp_pkts       resp_ip_bytes     
-##  Min.   :   0.000   Min.   :     0.0   Min.   :   0.00   Min.   :     0.0  
-##  1st Qu.:   1.000   1st Qu.:    60.0   1st Qu.:   0.00   1st Qu.:     0.0  
-##  Median :   3.000   Median :   180.0   Median :   0.00   Median :     0.0  
-##  Mean   :   2.488   Mean   :   167.4   Mean   :   0.66   Mean   :   106.6  
-##  3rd Qu.:   3.000   3rd Qu.:   180.0   3rd Qu.:   0.00   3rd Qu.:     0.0  
-##  Max.   :3031.000   Max.   :164117.0   Max.   :5975.00   Max.   :289732.0  
-##  tunnel_parents        label           detailed.label    
-##  Length:156103      Length:156103      Length:156103     
-##  Class :character   Class :character   Class :character  
-##  Mode  :character   Mode  :character   Mode  :character  
-##                                                          
-##                                                          
-## 
+## Warning in chisq.test(confusion_matrix): Chi-squared approximation may be
+## incorrect
+
+## Warning in chisq.test(confusion_matrix): Chi-squared approximation may be
+## incorrect
+
+## Warning in chisq.test(confusion_matrix): Chi-squared approximation may be
+## incorrect
+
+## Warning in chisq.test(confusion_matrix): Chi-squared approximation may be
+## incorrect
+
+## Warning in chisq.test(confusion_matrix): Chi-squared approximation may be
+## incorrect
+
+## Warning in chisq.test(confusion_matrix): Chi-squared approximation may be
+## incorrect
 \end{verbatim}
-
-From the summary above it seems like we might have too many variables
-that may not be contributing to the model. In the following steps we
-will be reducing dimensionality by removing someof the columns
-
-\hypertarget{dimensionality-reduction}{%
-\subsection{Dimensionality Reduction}\label{dimensionality-reduction}}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Removing some of the less  important variables from the data }
-\NormalTok{data1 }\OtherTok{\textless{}{-}} \FunctionTok{select}\NormalTok{(attacks, }
-\NormalTok{                        label, ts,}
-\NormalTok{                        id.orig\_h, id.resp\_h, }
-\NormalTok{                        id.orig\_p, id.resp\_p, }
-\NormalTok{                        proto, }
-\NormalTok{                        conn\_state, duration, }
-\NormalTok{                        resp\_ip\_bytes, orig\_ip\_bytes)}
+\CommentTok{\# Convert the results to a data frame}
+\NormalTok{correlation\_df }\OtherTok{\textless{}{-}} \FunctionTok{data.frame}\NormalTok{(}
+  \AttributeTok{variable =} \FunctionTok{names}\NormalTok{(correlation\_results),}
+  \AttributeTok{correlation =} \FunctionTok{unlist}\NormalTok{(correlation\_results)}
+\NormalTok{)}
 
-\CommentTok{\# View the first few rows of the selected data}
-\FunctionTok{summary}\NormalTok{(data1)}
+\CommentTok{\# Visualize correlation}
+\FunctionTok{ggplot}\NormalTok{(correlation\_df, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =} \FunctionTok{reorder}\NormalTok{(variable, correlation), }\AttributeTok{y =}\NormalTok{ correlation)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_bar}\NormalTok{(}\AttributeTok{stat =} \StringTok{"identity"}\NormalTok{, }\AttributeTok{fill =} \StringTok{"skyblue"}\NormalTok{, }\AttributeTok{color =} \StringTok{"black"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{coord\_flip}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{x =} \StringTok{"Variable"}\NormalTok{, }\AttributeTok{y =} \StringTok{"Correlation (Cramér\textquotesingle{}s V)"}\NormalTok{,}
+       \AttributeTok{title =} \StringTok{"Correlation between Variables and Label"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{()}
 \end{Highlighting}
 \end{Shaded}
 
-\begin{verbatim}
-##     label                 ts             id.orig_h          id.resp_h        
-##  Length:156103      Min.   :1.527e+09   Length:156103      Length:156103     
-##  Class :character   1st Qu.:1.527e+09   Class :character   Class :character  
-##  Mode  :character   Median :1.527e+09   Mode  :character   Mode  :character  
-##                     Mean   :1.527e+09                                        
-##                     3rd Qu.:1.527e+09                                        
-##                     Max.   :1.527e+09                                        
-##    id.orig_p       id.resp_p        proto            conn_state       
-##  Min.   :    3   Min.   :    0   Length:156103      Length:156103     
-##  1st Qu.:39440   1st Qu.:   22   Class :character   Class :character  
-##  Median :46810   Median :   22   Mode  :character   Mode  :character  
-##  Mean   :46308   Mean   : 8876                                        
-##  3rd Qu.:53891   3rd Qu.:   22                                        
-##  Max.   :61530   Max.   :59353                                        
-##    duration         resp_ip_bytes      orig_ip_bytes     
-##  Length:156103      Min.   :     0.0   Min.   :     0.0  
-##  Class :character   1st Qu.:     0.0   1st Qu.:    60.0  
-##  Mode  :character   Median :     0.0   Median :   180.0  
-##                     Mean   :   106.6   Mean   :   167.4  
-##                     3rd Qu.:     0.0   3rd Qu.:   180.0  
-##                     Max.   :289732.0   Max.   :164117.0
-\end{verbatim}
+\includegraphics{Notebook_files/figure-latex/unnamed-chunk-4-1.pdf}
 
 \hypertarget{visualizing-pattern-in-network-traffic-based-on-timestamps}{%
 \subsection{Visualizing Pattern in Network Traffic based on
@@ -556,10 +561,10 @@ Timestamps}\label{visualizing-pattern-in-network-traffic-based-on-timestamps}}
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{\# Convert \textquotesingle{}ts\textquotesingle{} to a DateTime object }
-\NormalTok{data1}\SpecialCharTok{$}\NormalTok{ts }\OtherTok{\textless{}{-}} \FunctionTok{as.POSIXct}\NormalTok{(data1}\SpecialCharTok{$}\NormalTok{ts, }\AttributeTok{format =} \StringTok{"\%Y{-}\%m{-}\%d \%H:\%M:\%S"}\NormalTok{)  }
+\NormalTok{attacks}\SpecialCharTok{$}\NormalTok{ts }\OtherTok{\textless{}{-}} \FunctionTok{as.POSIXct}\NormalTok{(attacks}\SpecialCharTok{$}\NormalTok{ts, }\AttributeTok{format =} \StringTok{"\%Y{-}\%m{-}\%d \%H:\%M:\%S"}\NormalTok{)  }
 
 \CommentTok{\# Create a new dataframe with counts of attacks per time period (e.g., per day)}
-\NormalTok{attacks\_per\_period }\OtherTok{\textless{}{-}}\NormalTok{ data1 }\SpecialCharTok{\%\textgreater{}\%}
+\NormalTok{attacks\_per\_period }\OtherTok{\textless{}{-}}\NormalTok{ attacks }\SpecialCharTok{\%\textgreater{}\%}
   \FunctionTok{group\_by}\NormalTok{(}\AttributeTok{ts =} \FunctionTok{floor\_date}\NormalTok{(ts, }\StringTok{"day"}\NormalTok{), label) }\SpecialCharTok{\%\textgreater{}\%}  \CommentTok{\# group by day and label;  }
   \FunctionTok{summarise}\NormalTok{(}\AttributeTok{count =} \FunctionTok{n}\NormalTok{(), }\AttributeTok{.groups =} \StringTok{\textquotesingle{}drop\textquotesingle{}}\NormalTok{)  }\CommentTok{\# count the number of rows (attacks) per group}
 
@@ -574,44 +579,144 @@ Timestamps}\label{visualizing-pattern-in-network-traffic-based-on-timestamps}}
 
 \includegraphics{Notebook_files/figure-latex/unnamed-chunk-5-1.pdf}
 
-\hypertarget{exploring-the-categorical-variables}{%
-\subsection{Exploring The Categorical
-Variables}\label{exploring-the-categorical-variables}}
+\hypertarget{visualizing-the-number-of-bytes-sent-from-origin}{%
+\subsection{Visualizing the Number of Bytes Sent from
+Origin}\label{visualizing-the-number-of-bytes-sent-from-origin}}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# First lets Calculate the count of unique values}
-\NormalTok{unique\_counts }\OtherTok{\textless{}{-}}\NormalTok{ attacks }\SpecialCharTok{\%\textgreater{}\%}
-  \FunctionTok{summarise}\NormalTok{(}
-    \AttributeTok{unique\_id\_orig\_h =} \FunctionTok{n\_distinct}\NormalTok{(id.orig\_h),}
-    \AttributeTok{unique\_id\_resp\_h =} \FunctionTok{n\_distinct}\NormalTok{(id.resp\_h),}
-    \AttributeTok{unique\_id\_orig\_p =} \FunctionTok{n\_distinct}\NormalTok{(id.orig\_p),}
-    \AttributeTok{unique\_id\_resp\_p =} \FunctionTok{n\_distinct}\NormalTok{(id.resp\_p),}
-    \AttributeTok{unique\_proto =} \FunctionTok{n\_distinct}\NormalTok{(proto),}
-    \AttributeTok{unique\_conn\_state =} \FunctionTok{n\_distinct}\NormalTok{(conn\_state)}
-\NormalTok{  )}
+\CommentTok{\# Calculate the 99th percentile to identify the 1\% threshold}
+\NormalTok{percentile\_99 }\OtherTok{\textless{}{-}} \FunctionTok{quantile}\NormalTok{(attacks}\SpecialCharTok{$}\NormalTok{orig\_ip\_bytes, }\AttributeTok{probs =} \FloatTok{0.99}\NormalTok{)}
 
-\CommentTok{\# Print the unique counts}
-\FunctionTok{print}\NormalTok{(unique\_counts)}
+\CommentTok{\# Create a density plot with a more focused x{-}axis limit}
+\FunctionTok{ggplot}\NormalTok{(attacks, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ orig\_ip\_bytes, }\AttributeTok{fill =}\NormalTok{ label)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_density}\NormalTok{(}\AttributeTok{alpha =} \FloatTok{0.5}\NormalTok{, }\AttributeTok{trim =} \ConstantTok{TRUE}\NormalTok{) }\SpecialCharTok{+}  \CommentTok{\# Trim the density to limit the plot}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{x =} \StringTok{"Number of Bytes Sent from Origin"}\NormalTok{,}
+       \AttributeTok{y =} \StringTok{"Density"}\NormalTok{,}
+       \AttributeTok{title =} \StringTok{"Density Plot of Number of Bytes Sent from Origin by Label"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{scale\_fill\_manual}\NormalTok{(}\AttributeTok{values =} \FunctionTok{c}\NormalTok{(}\StringTok{"\#1f78b4"}\NormalTok{, }\StringTok{"\#33a02c"}\NormalTok{)) }\SpecialCharTok{+}  \CommentTok{\# Custom colors for the fill}
+  \FunctionTok{theme\_minimal}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{xlim}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\FunctionTok{max}\NormalTok{(}\DecValTok{180}\NormalTok{, percentile\_99)))  }\CommentTok{\# Set x{-}axis limits to highlight the 1\% tail}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{verbatim}
-##   unique_id_orig_h unique_id_resp_h unique_id_orig_p unique_id_resp_p
-## 1              961            64194            26740               11
-##   unique_proto unique_conn_state
-## 1            3                11
+## Warning: Removed 9585 rows containing non-finite values (`stat_density()`).
 \end{verbatim}
 
-\#\#Visualizing Three Categorical Variables on a Barchart
+\includegraphics{Notebook_files/figure-latex/unnamed-chunk-6-1.pdf}
+
+\hypertarget{exploring-the-categorical-variables-history-id.resp_p-id.resp_p-id.resp_h-id.resp_p-proto-all-have-high-correaltions-with-label}{%
+\subsection{Exploring the Categorical Variables History, ID.Resp\_p,
+ID.Resp\_p, ID.Resp\_h, ID.Resp\_p, Proto (All have high correaltions
+with
+label)}\label{exploring-the-categorical-variables-history-id.resp_p-id.resp_p-id.resp_h-id.resp_p-proto-all-have-high-correaltions-with-label}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Determine the number of unique values for each variable}
+\NormalTok{num\_unique\_history }\OtherTok{\textless{}{-}}\NormalTok{ attacks }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{select}\NormalTok{(history) }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{n\_distinct}\NormalTok{()}
+\NormalTok{num\_unique\_id\_resp\_p }\OtherTok{\textless{}{-}}\NormalTok{ attacks }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{select}\NormalTok{(id.resp\_p) }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{n\_distinct}\NormalTok{()}
+\NormalTok{num\_unique\_id\_resp\_h }\OtherTok{\textless{}{-}}\NormalTok{ attacks }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{select}\NormalTok{(id.resp\_h) }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{n\_distinct}\NormalTok{()}
+\NormalTok{num\_unique\_id\_orig\_h }\OtherTok{\textless{}{-}}\NormalTok{ attacks }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{select}\NormalTok{(id.orig\_p) }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{n\_distinct}\NormalTok{()}
+\NormalTok{num\_unique\_proto }\OtherTok{\textless{}{-}}\NormalTok{ attacks }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{select}\NormalTok{(proto) }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{n\_distinct}\NormalTok{()}
+
+\CommentTok{\# Create a data frame to store the results}
+\NormalTok{unique\_values\_df }\OtherTok{\textless{}{-}} \FunctionTok{data.frame}\NormalTok{(}
+  \AttributeTok{variable =} \FunctionTok{c}\NormalTok{(}\StringTok{"id.resp\_p"}\NormalTok{, }\StringTok{"id.resp\_h"}\NormalTok{, }\StringTok{"id.orig\_p"}\NormalTok{, }\StringTok{"proto"}\NormalTok{, }\StringTok{"history"}\NormalTok{),}
+  \AttributeTok{unique\_values =} \FunctionTok{c}\NormalTok{(num\_unique\_id\_resp\_p, num\_unique\_id\_resp\_h, num\_unique\_id\_orig\_h, num\_unique\_proto, num\_unique\_history)}
+\NormalTok{)}
+
+\CommentTok{\# Use kable for presentation}
+\FunctionTok{kable}\NormalTok{(unique\_values\_df, }\AttributeTok{caption =} \StringTok{"Number of Unique Values in Each Variable"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{longtable}[]{@{}lr@{}}
+\caption{Number of Unique Values in Each Variable}\tabularnewline
+\toprule()
+variable & unique\_values \\
+\midrule()
+\endfirsthead
+\toprule()
+variable & unique\_values \\
+\midrule()
+\endhead
+id.resp\_p & 65426 \\
+id.resp\_h & 597107 \\
+id.orig\_p & 28243 \\
+proto & 3 \\
+history & 126 \\
+\bottomrule()
+\end{longtable}
+
+\#\#Visualizing The Categorical Variables History with a WordCloud
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Load necessary libraries}
+\FunctionTok{library}\NormalTok{(wordcloud)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Loading required package: RColorBrewer
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Filter out "unknown" values}
+\NormalTok{attacks\_filtered }\OtherTok{\textless{}{-}} \FunctionTok{subset}\NormalTok{(attacks, history }\SpecialCharTok{!=} \StringTok{"unknown"}\NormalTok{)}
+
+\CommentTok{\# Create separate datasets for malicious and benign}
+\NormalTok{malicious\_data }\OtherTok{\textless{}{-}} \FunctionTok{subset}\NormalTok{(attacks\_filtered, label }\SpecialCharTok{==} \StringTok{"Malicious"}\NormalTok{)}
+\NormalTok{benign\_data }\OtherTok{\textless{}{-}} \FunctionTok{subset}\NormalTok{(attacks\_filtered, label }\SpecialCharTok{==} \StringTok{"Benign"}\NormalTok{)}
+
+\CommentTok{\# Create word cloud for malicious data}
+\FunctionTok{wordcloud}\NormalTok{(malicious\_data}\SpecialCharTok{$}\NormalTok{history, }\AttributeTok{scale=}\FunctionTok{c}\NormalTok{(}\DecValTok{5}\NormalTok{,}\FloatTok{0.5}\NormalTok{), }\AttributeTok{min.freq =} \DecValTok{10}\NormalTok{, }\AttributeTok{random.order=}\ConstantTok{FALSE}\NormalTok{, }\AttributeTok{colors=}\FunctionTok{brewer.pal}\NormalTok{(}\DecValTok{8}\NormalTok{, }\StringTok{"Dark2"}\NormalTok{), }\AttributeTok{main=}\StringTok{"Malicious"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Loading required namespace: tm
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in tm_map.SimpleCorpus(corpus, tm::removePunctuation): transformation
+## drops documents
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in tm_map.SimpleCorpus(corpus, function(x) tm::removeWords(x,
+## tm::stopwords())): transformation drops documents
+\end{verbatim}
+
+\includegraphics{Notebook_files/figure-latex/unnamed-chunk-8-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Create word cloud for benign data}
+\FunctionTok{wordcloud}\NormalTok{(benign\_data}\SpecialCharTok{$}\NormalTok{history, }\AttributeTok{scale=}\FunctionTok{c}\NormalTok{(}\DecValTok{5}\NormalTok{,}\FloatTok{0.5}\NormalTok{), }\AttributeTok{min.freq =} \DecValTok{10}\NormalTok{, }\AttributeTok{random.order=}\ConstantTok{FALSE}\NormalTok{, }\AttributeTok{colors=}\FunctionTok{brewer.pal}\NormalTok{(}\DecValTok{8}\NormalTok{, }\StringTok{"Dark2"}\NormalTok{), }\AttributeTok{main=}\StringTok{"Benign"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning in tm_map.SimpleCorpus(corpus, tm::removePunctuation): transformation
+## drops documents
+
+## Warning in tm_map.SimpleCorpus(corpus, tm::removePunctuation): transformation
+## drops documents
+\end{verbatim}
+
+\includegraphics{Notebook_files/figure-latex/unnamed-chunk-8-2.pdf}
+
+\#\#Visualizing The Protocols Values on a Barchart
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{\# Ensure all varaibales are factors}
 \NormalTok{attacks}\SpecialCharTok{$}\NormalTok{label }\OtherTok{\textless{}{-}} \FunctionTok{as.factor}\NormalTok{(attacks}\SpecialCharTok{$}\NormalTok{label)}
 \NormalTok{attacks}\SpecialCharTok{$}\NormalTok{proto }\OtherTok{\textless{}{-}} \FunctionTok{as.factor}\NormalTok{(attacks}\SpecialCharTok{$}\NormalTok{proto)}
-\NormalTok{attacks}\SpecialCharTok{$}\NormalTok{conn\_state }\OtherTok{\textless{}{-}} \FunctionTok{as.factor}\NormalTok{(attacks}\SpecialCharTok{$}\NormalTok{conn\_state)}
-\NormalTok{attacks}\SpecialCharTok{$}\NormalTok{id.resp\_p}\OtherTok{\textless{}{-}} \FunctionTok{as.factor}\NormalTok{(attacks}\SpecialCharTok{$}\NormalTok{id.resp\_p)}
 
 \CommentTok{\# Plot1 Protocols}
 \FunctionTok{ggplot}\NormalTok{(}\AttributeTok{data =}\NormalTok{ attacks, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ proto, }\AttributeTok{fill =}\NormalTok{ label)) }\SpecialCharTok{+}
@@ -619,48 +724,68 @@ Variables}\label{exploring-the-categorical-variables}}
   \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"Distribution of Labels across Protocols"}\NormalTok{,}
        \AttributeTok{x =} \StringTok{"Protocols"}\NormalTok{,}
        \AttributeTok{y =} \StringTok{"Count"}\NormalTok{) }\SpecialCharTok{+}
-  \FunctionTok{scale\_fill\_brewer}\NormalTok{(}\AttributeTok{palette =} \StringTok{"Set1"}\NormalTok{)  }\CommentTok{\# This changes the color palette}
+  \FunctionTok{scale\_fill\_brewer}\NormalTok{(}\AttributeTok{palette =} \StringTok{"Set1"}\NormalTok{)  }
 \end{Highlighting}
 \end{Shaded}
 
 \includegraphics{Notebook_files/figure-latex/categorical-viz-1.pdf}
 
+\hypertarget{dimensionality-reduction}{%
+\subsection{Dimensionality Reduction}\label{dimensionality-reduction}}
+
+This was the most challenging part of the project I attempted
+differerent approaches like using a stepwise linear discrimination,
+lemitization of IP addresses and ports to reduce dimensionality with
+limited success. I opted to create a subset of the data since I was also
+having problems pushing the huge original data file to Github. I decide
+to create a subset of the data with only the varaibles that I was using
+in my project.
+
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Plot2 Connection State}
-\FunctionTok{ggplot}\NormalTok{(}\AttributeTok{data =}\NormalTok{ attacks, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ conn\_state, }\AttributeTok{fill =}\NormalTok{ label)) }\SpecialCharTok{+}
-  \FunctionTok{geom\_bar}\NormalTok{(}\AttributeTok{position =} \StringTok{"dodge"}\NormalTok{) }\SpecialCharTok{+}
-  \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"Distribution of Labels across Connection States"}\NormalTok{,}
-       \AttributeTok{x =} \StringTok{"Connection State"}\NormalTok{,}
-       \AttributeTok{y =} \StringTok{"Count"}\NormalTok{) }\SpecialCharTok{+}
-  \FunctionTok{scale\_fill\_brewer}\NormalTok{(}\AttributeTok{palette =} \StringTok{"Set1"}\NormalTok{)  }\CommentTok{\# This changes the color palette}
+\CommentTok{\# Removing some of the less  important variables from the data }
+\NormalTok{data1 }\OtherTok{\textless{}{-}} \FunctionTok{select}\NormalTok{(attacks, }
+\NormalTok{                        label, ts, }
+\NormalTok{                        id.resp\_h, id.resp\_p, id.orig\_p,}
+\NormalTok{                        proto, history, orig\_ip\_bytes)}
+
+\CommentTok{\# View the first few rows of the selected data}
+\FunctionTok{summary}\NormalTok{(data1)}
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{Notebook_files/figure-latex/categorical-viz-2.pdf}
+\begin{verbatim}
+##        label              ts                          id.resp_h        
+##  Benign   :469275   Min.   :2018-05-09 15:30:31.01   Length:1008748    
+##  Malicious:539473   1st Qu.:2018-05-10 17:57:40.75   Class :character  
+##                     Median :2018-05-11 20:40:00.00   Mode  :character  
+##                     Mean   :2018-05-11 21:43:27.22                     
+##                     3rd Qu.:2018-05-13 01:13:40.00                     
+##                     Max.   :2018-05-14 07:24:43.02                     
+##    id.resp_p       id.orig_p      proto          history         
+##  Min.   :    0   Min.   :    3   icmp: 17421   Length:1008748    
+##  1st Qu.:   23   1st Qu.:43730   tcp :583134   Class :character  
+##  Median : 8080   Median :43763   udp :408193   Mode  :character  
+##  Mean   :16098   Mean   :44437                                   
+##  3rd Qu.:28180   3rd Qu.:48814                                   
+##  Max.   :65535   Max.   :65394                                   
+##  orig_ip_bytes    
+##  Min.   :   0.00  
+##  1st Qu.:  40.00  
+##  Median :  60.00  
+##  Mean   :  81.15  
+##  3rd Qu.:  60.00  
+##  Max.   :2990.00
+\end{verbatim}
+
+\hypertarget{export-the-subset-for-use-in-second-iteration-of-the-project}{%
+\subsubsection{Export the Subset For Use in Second Iteration of the
+Project}\label{export-the-subset-for-use-in-second-iteration-of-the-project}}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Plot3 Destination pR}
-\FunctionTok{ggplot}\NormalTok{(}\AttributeTok{data =}\NormalTok{ attacks, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ id.resp\_p, }\AttributeTok{fill =}\NormalTok{ label)) }\SpecialCharTok{+}
-  \FunctionTok{geom\_bar}\NormalTok{(}\AttributeTok{position =} \StringTok{"dodge"}\NormalTok{) }\SpecialCharTok{+}
-  \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"Distribution of Labels across Destination Port"}\NormalTok{,}
-       \AttributeTok{x =} \StringTok{"Connection State"}\NormalTok{,}
-       \AttributeTok{y =} \StringTok{"Count"}\NormalTok{) }\SpecialCharTok{+}
-  \FunctionTok{scale\_fill\_brewer}\NormalTok{(}\AttributeTok{palette =} \StringTok{"Set1"}\NormalTok{)  }\CommentTok{\# This changes the color palette}
-\end{Highlighting}
-\end{Shaded}
-
-\includegraphics{Notebook_files/figure-latex/categorical-viz-3.pdf}
-\#\#Exploring the Numeric Variables
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{resp.ip\_gt\_zero }\OtherTok{\textless{}{-}} \FunctionTok{sum}\NormalTok{(data1}\SpecialCharTok{$}\NormalTok{resp\_ip\_bytes }\SpecialCharTok{\textgreater{}} \DecValTok{0}\NormalTok{)}
-
-\NormalTok{orig.ip\_gt\_180 }\OtherTok{\textless{}{-}} \FunctionTok{sum}\NormalTok{(data1}\SpecialCharTok{$}\NormalTok{resp\_ip\_bytes }\SpecialCharTok{\textgreater{}} \DecValTok{180}\NormalTok{)}
-
-\NormalTok{null\_durations }\OtherTok{\textless{}{-}} \FunctionTok{sum}\NormalTok{(data1}\SpecialCharTok{$}\NormalTok{duration }\SpecialCharTok{==} \StringTok{"{-}"}\NormalTok{)}
+\CommentTok{\#write\_xlsx(data1, path = "data/data1.xlsx") }
+\CommentTok{\#Used in the first Iteration to create current Data Set}
 \end{Highlighting}
 \end{Shaded}
 
@@ -668,11 +793,14 @@ Variables}\label{exploring-the-categorical-variables}}
 \subsection{Separating Data into Train and
 Test}\label{separating-data-into-train-and-test}}
 
+The train data will be used to calibrate the data and the test will be
+used to validate model predictions and generate a ROC curve.
+
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{\# Create a data partition}
 \FunctionTok{set.seed}\NormalTok{(}\DecValTok{5774}\NormalTok{)  }
-\NormalTok{trainIndex }\OtherTok{\textless{}{-}} \FunctionTok{createDataPartition}\NormalTok{(data1}\SpecialCharTok{$}\NormalTok{label, }\AttributeTok{p =} \FloatTok{0.8}\NormalTok{, }\AttributeTok{list =} \ConstantTok{FALSE}\NormalTok{, }\AttributeTok{times =} \DecValTok{1}\NormalTok{)}
+\NormalTok{trainIndex }\OtherTok{\textless{}{-}} \FunctionTok{createDataPartition}\NormalTok{(data1}\SpecialCharTok{$}\NormalTok{label, }\AttributeTok{p =} \FloatTok{0.7}\NormalTok{, }\AttributeTok{list =} \ConstantTok{FALSE}\NormalTok{, }\AttributeTok{times =} \DecValTok{1}\NormalTok{)}
 
 \CommentTok{\# Create training and test datasets}
 \NormalTok{train }\OtherTok{\textless{}{-}}\NormalTok{ data1[trainIndex, ]}
@@ -684,7 +812,7 @@ Test}\label{separating-data-into-train-and-test}}
 \end{Shaded}
 
 \begin{verbatim}
-## [1] 124883     11
+## [1] 706125      8
 \end{verbatim}
 
 \begin{Shaded}
@@ -694,19 +822,270 @@ Test}\label{separating-data-into-train-and-test}}
 \end{Shaded}
 
 \begin{verbatim}
-## [1] 31220    11
+## [1] 302623      8
 \end{verbatim}
 
-\hypertarget{building-and-training-the-logistic-regression-model}{%
-\subsection{Building and Training The Logistic Regression
-Model}\label{building-and-training-the-logistic-regression-model}}
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Count the number of occurrences for each level of the \textquotesingle{}label\textquotesingle{} variable}
+\NormalTok{label\_counts }\OtherTok{\textless{}{-}} \FunctionTok{table}\NormalTok{(attacks}\SpecialCharTok{$}\NormalTok{label)}
 
-\hypertarget{testing-model-and-cross-validation}{%
-\subsection{Testing Model and Cross
-Validation}\label{testing-model-and-cross-validation}}
+\CommentTok{\# Print the counts}
+\FunctionTok{print}\NormalTok{(label\_counts)}
+\end{Highlighting}
+\end{Shaded}
 
-\hypertarget{results-and-model-intepretation}{%
-\subsection{Results and Model
-Intepretation}\label{results-and-model-intepretation}}
+\begin{verbatim}
+## 
+##    Benign Malicious 
+##    469275    539473
+\end{verbatim}
+
+\hypertarget{logistic-regression-model}{%
+\subsection{Logistic Regression Model}\label{logistic-regression-model}}
+
+Our Logistic Regression Model will thus use the number of bytes sent
+from the origin and network protocol to determine if a network request
+is malicious or benign. The base equation for this model is
+
+\[
+\begin{equation*}
+\log\left(\frac{p_i}{1-p_i}\right) = \beta_0 + \beta_1 \times orig\_ip\_bytes + \beta_3 \times proto
+\end{equation*}
+\]\\
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Running a logistic regression model with received\_callback as the response variable}
+\CommentTok{\# and years\_experience, race, and gender as explanatory variables}
+
+\NormalTok{mult\_log\_mod }\OtherTok{\textless{}{-}} \FunctionTok{glm}\NormalTok{(label }\SpecialCharTok{\textasciitilde{}}\NormalTok{ orig\_ip\_bytes }\SpecialCharTok{+}\NormalTok{ proto, }
+                      \AttributeTok{data =}\NormalTok{ train, }
+                      \AttributeTok{family =}\NormalTok{ binomial)}
+
+\CommentTok{\# Displaying the summary of the model}
+\FunctionTok{tidy}\NormalTok{(mult\_log\_mod)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 4 x 5
+##   term           estimate  std.error statistic  p.value
+##   <chr>             <dbl>      <dbl>     <dbl>    <dbl>
+## 1 (Intercept)   -17.7     35.7          -0.494 6.21e- 1
+## 2 orig_ip_bytes   0.00113  0.0000775    14.5   9.60e-48
+## 3 prototcp       20.1     35.7           0.561 5.74e- 1
+## 4 protoudp        8.19    35.7           0.229 8.19e- 1
+\end{verbatim}
+
+\hypertarget{results}{%
+\subsection{Results}\label{results}}
+
+\hypertarget{equation-for-icmp}{%
+\subsubsection{Equation for icmp}\label{equation-for-icmp}}
+
+\[
+\begin{equation*}
+\log\left(\frac{p_i}{1-p_i}\right) = \beta_0 + \beta_1 \times orig\_ip\_bytes + \beta_3 \times proto
+\end{equation*}
+\]\\
+
+\hypertarget{equation-for-tcp}{%
+\subsubsection{Equation for TCP}\label{equation-for-tcp}}
+
+\[
+\begin{equation*}
+\log\left(\frac{p_i}{1-p_i}\right) = \beta_0 + \beta_1 \times orig\_ip\_bytes + \beta_3 \times proto
+\end{equation*}
+\]
+
+\hypertarget{equation-for-udp}{%
+\subsubsection{Equation for UDP}\label{equation-for-udp}}
+
+\[
+\begin{equation*}
+\log\left(\frac{p_i}{1-p_i}\right) = \beta_0 + \beta_1 \times orig\_ip\_bytes + \beta_3 \times proto
+\end{equation*}
+\]
+
+\hypertarget{cross-validation}{%
+\subsubsection{Cross Validation}\label{cross-validation}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Create 10{-}fold cross{-}validation sets}
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{123}\NormalTok{) }\CommentTok{\# for reproducibility}
+\NormalTok{folds }\OtherTok{\textless{}{-}} \FunctionTok{createFolds}\NormalTok{(train}\SpecialCharTok{$}\NormalTok{label, }\AttributeTok{k =} \DecValTok{10}\NormalTok{)}
+
+\CommentTok{\# Function to perform cross{-}validation and compute AUC for each fold}
+\NormalTok{cv\_roc\_auc }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(train\_data, folds) \{}
+\NormalTok{  auc\_list }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{()}
+  
+  \ControlFlowTok{for}\NormalTok{(i }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\FunctionTok{length}\NormalTok{(folds)) \{}
+    \CommentTok{\# Splitting data into training and test sets}
+\NormalTok{    test\_indices }\OtherTok{\textless{}{-}}\NormalTok{ folds[[i]]}
+\NormalTok{    train\_indices }\OtherTok{\textless{}{-}} \FunctionTok{setdiff}\NormalTok{(}\FunctionTok{seq\_len}\NormalTok{(}\FunctionTok{nrow}\NormalTok{(train\_data)), test\_indices)}
+    
+\NormalTok{    train\_fold }\OtherTok{\textless{}{-}}\NormalTok{ train\_data[train\_indices, ]}
+\NormalTok{    test\_fold }\OtherTok{\textless{}{-}}\NormalTok{ train\_data[test\_indices, ]}
+    
+    \CommentTok{\# Fit the model on the training set}
+\NormalTok{    glm\_model }\OtherTok{\textless{}{-}} \FunctionTok{glm}\NormalTok{(label }\SpecialCharTok{\textasciitilde{}}\NormalTok{ orig\_ip\_bytes }\SpecialCharTok{+}\NormalTok{ proto, }\AttributeTok{data =}\NormalTok{ train\_fold, }\AttributeTok{family =}\NormalTok{ binomial)}
+    
+    \CommentTok{\# Predict probabilities on the test set}
+\NormalTok{    prob\_predictions }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(glm\_model, }\AttributeTok{newdata =}\NormalTok{ test\_fold, }\AttributeTok{type =} \StringTok{"response"}\NormalTok{)}
+    
+    \CommentTok{\# Compute ROC AUC}
+\NormalTok{    roc\_curve }\OtherTok{\textless{}{-}} \FunctionTok{roc}\NormalTok{(test\_fold}\SpecialCharTok{$}\NormalTok{label, prob\_predictions)}
+\NormalTok{    auc\_value }\OtherTok{\textless{}{-}} \FunctionTok{auc}\NormalTok{(roc\_curve)}
+\NormalTok{    auc\_list }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(auc\_list, auc\_value)}
+\NormalTok{  \}}
+  
+  \FunctionTok{return}\NormalTok{(auc\_list)}
+\NormalTok{\}}
+
+\CommentTok{\# Perform cross{-}validation and compute AUC}
+\NormalTok{auc\_results }\OtherTok{\textless{}{-}} \FunctionTok{cv\_roc\_auc}\NormalTok{(train, folds)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Setting levels: control = Benign, case = Malicious
+\end{verbatim}
+
+\begin{verbatim}
+## Setting direction: controls < cases
+\end{verbatim}
+
+\begin{verbatim}
+## Setting levels: control = Benign, case = Malicious
+\end{verbatim}
+
+\begin{verbatim}
+## Setting direction: controls < cases
+\end{verbatim}
+
+\begin{verbatim}
+## Setting levels: control = Benign, case = Malicious
+\end{verbatim}
+
+\begin{verbatim}
+## Setting direction: controls < cases
+\end{verbatim}
+
+\begin{verbatim}
+## Setting levels: control = Benign, case = Malicious
+\end{verbatim}
+
+\begin{verbatim}
+## Setting direction: controls < cases
+\end{verbatim}
+
+\begin{verbatim}
+## Setting levels: control = Benign, case = Malicious
+\end{verbatim}
+
+\begin{verbatim}
+## Setting direction: controls < cases
+\end{verbatim}
+
+\begin{verbatim}
+## Setting levels: control = Benign, case = Malicious
+\end{verbatim}
+
+\begin{verbatim}
+## Setting direction: controls < cases
+\end{verbatim}
+
+\begin{verbatim}
+## Setting levels: control = Benign, case = Malicious
+\end{verbatim}
+
+\begin{verbatim}
+## Setting direction: controls < cases
+\end{verbatim}
+
+\begin{verbatim}
+## Setting levels: control = Benign, case = Malicious
+\end{verbatim}
+
+\begin{verbatim}
+## Setting direction: controls < cases
+\end{verbatim}
+
+\begin{verbatim}
+## Setting levels: control = Benign, case = Malicious
+\end{verbatim}
+
+\begin{verbatim}
+## Setting direction: controls < cases
+\end{verbatim}
+
+\begin{verbatim}
+## Setting levels: control = Benign, case = Malicious
+\end{verbatim}
+
+\begin{verbatim}
+## Setting direction: controls < cases
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Calculate the mean AUC from all folds}
+\NormalTok{mean\_auc }\OtherTok{\textless{}{-}} \FunctionTok{mean}\NormalTok{(auc\_results)}
+
+\CommentTok{\# Output the results}
+\FunctionTok{print}\NormalTok{(}\FunctionTok{paste}\NormalTok{(}\StringTok{"Mean AUC from cross{-}validation:"}\NormalTok{, mean\_auc))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "Mean AUC from cross-validation: 0.954349342908229"
+\end{verbatim}
+
+\hypertarget{roc-curve}{%
+\subsubsection{ROC Curve}\label{roc-curve}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# First, predict the probabilities on the validation set (Split Test Data)}
+\NormalTok{prob\_predictions }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(mult\_log\_mod, }\AttributeTok{newdata =}\NormalTok{ test, }\AttributeTok{type =} \StringTok{"response"}\NormalTok{)}
+
+\CommentTok{\# Generate the ROC object}
+\NormalTok{roc\_obj }\OtherTok{\textless{}{-}} \FunctionTok{roc}\NormalTok{(test}\SpecialCharTok{$}\NormalTok{label, prob\_predictions)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Setting levels: control = Benign, case = Malicious
+\end{verbatim}
+
+\begin{verbatim}
+## Setting direction: controls < cases
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Plot the ROC curve}
+\FunctionTok{plot}\NormalTok{(roc\_obj, }\AttributeTok{main =} \StringTok{"ROC Curve"}\NormalTok{, }\AttributeTok{col =} \StringTok{"\#1c61b6"}\NormalTok{, }\AttributeTok{lwd =} \DecValTok{2}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Notebook_files/figure-latex/unnamed-chunk-13-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Add AUC to the plot}
+\FunctionTok{auc}\NormalTok{(roc\_obj)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Area under the curve: 0.9541
+\end{verbatim}
+
+\hypertarget{conlusions-and-reccommenadtions}{%
+\subsection{Conlusions and
+Reccommenadtions}\label{conlusions-and-reccommenadtions}}
 
 \end{document}
