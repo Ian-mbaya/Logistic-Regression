@@ -125,6 +125,8 @@ ggplot(correlation_df, aes(x = reorder(variable, correlation), y = correlation))
   theme_minimal()
 
 ```
+In the first iteration there were 23 variables, I opted to remove all the variables that had a correlation of less than 0.75 and columns  that  had all values set to "-" the placeholder for missing.
+This alllowed me to save on time and space when running the models and also allowed me to upload the Project to GitHub without getting the error file is too large.
 
 ## Visualizing Pattern in Network Traffic based on Timestamps
 
@@ -146,6 +148,7 @@ ggplot(attacks_per_period, aes(x = ts, y = count, group = label, color = label))
   scale_x_datetime(date_breaks = "1 day", date_labels = "%b %d")  
 
 ```
+The line charts shows that both Malicious and Benign attacks  follow the same pattern. Although the data shows that there are more malicious requests in this particular data set.
 
 ## Visualizing the Number of Bytes Sent from Origin
 
@@ -164,6 +167,7 @@ ggplot(attacks, aes(x = orig_ip_bytes, fill = label)) +
   xlim(c(0, max(180, percentile_99)))  # Set x-axis limits to highlight the 1% tail
 
 ```
+The density charts shows that request that send over 60 bytes  from the  origin Ip address tend to be mostly malicious. Most benign requests send less than 50  bytesfrom the origin IP.
 
 ## Exploring the Categorical Variables History, ID.Resp_p, ID.Resp_p, ID.Resp_h, ID.Resp_p, Proto (All have high correaltions with label)
 
@@ -185,6 +189,8 @@ unique_values_df <- data.frame(
 kable(unique_values_df, caption = "Number of Unique Values in Each Variable")
 
 ```
+Of the FIVE  categorical models picked  from the first iteration (cor > 0.75 and non missing) only one (protocol) seem to be appropriate for linear regression model. The destination and  origin (IP addresses and Ports), and network history have very large dimensionality so they  can only be fit into a regression model after  rigorous stemming and lemitization that I did not have the resources to implement.
+However I opted to use wordcloud to visualize how the different values of history appear in the dataset.
 
 ##Visualizing The Categorical Variables History with a WordCloud
 
@@ -206,6 +212,7 @@ wordcloud(malicious_data$history, scale=c(5,0.5), min.freq = 10, random.order=FA
 wordcloud(benign_data$history, scale=c(5,0.5), min.freq = 10, random.order=FALSE, colors=brewer.pal(8, "Dark2"), main="Benign")
 
 ```
+The two  worldclouds confirm my  intial sentiments with the history "haddaaff" dominating benign request and all the other states  in the malicious set. 
 
 ##Visualizing The Protocols Values on a Barchart
 
@@ -223,6 +230,7 @@ ggplot(data = attacks, aes(x = proto, fill = label)) +
   scale_fill_brewer(palette = "Set1")  
 
 ```
+The Data appaers to be very skewed with  most  of the  malicious attacks  concentrated in the tcp protocol and benign attacks  in the udp protocol.
 
 ## Dimensionality Reduction
 
@@ -283,7 +291,7 @@ Our Logistic Regression Model will thus use the number of bytes sent from the or
 
 $$
 \begin{equation*}
-\log\left(\frac{p_i}{1-p_i}\right) = \beta_0 + \beta_1 \times orig\_ip\_bytes + \beta_3 \times proto
+\log\left(\frac{p_i}{1-p_i}\right) = \beta_0 + \beta_1 \times orig\_ip\_bytes + \beta_2 \times proto
 \end{equation*}
 $$ \
 
@@ -308,26 +316,31 @@ tidy(mult_log_mod)
 
 $$
 \begin{equation*}
-\log\left(\frac{p_i}{1-p_i}\right) = \beta_0 + \beta_1 \times orig\_ip\_bytes + \beta_3 \times proto
+\log\left(\frac{p_i}{1-p_i}\right) = \ -17.66528932 + \ 0.00112571 \times orig\_ip\_bytes 
 \end{equation*}
 $$ \
 
-### Equation for TCP
+>Intercept (β0): −17.66528932 represents the log odds of the outcome when all predictors are at their reference level O bytes sent sent and icmp protocol.
+>Coefficient for orig_ip_bytes (β1): The coefficient 0.00112571, indicates the amount of change in the log odds of the outcome for a one-unit increase in 'orig_ip_bytes'.
 
+### Equation for TCP
 $$
 \begin{equation*}
-\log\left(\frac{p_i}{1-p_i}\right) = \beta_0 + \beta_1 \times orig\_ip\_bytes + \beta_3 \times proto
+\log\left(\frac{p_i}{1-p_i}\right) = \ -17.66528932 + \ 0.00112571 \times orig\_ip\_bytes + \ 8.19231031 \times prototcp
 \end{equation*}
-$$ 
+$$ \
+
+>Coefficient for prototcp is 8.19231031 this tells us that when the protocol is TCP (as opposed to ICMP), the likelihood of a malicious is 8.19231031 units higher than when the protocol is ICMP, while holding bytes sent from origin constant.
 
 
 ### Equation for UDP
-
 $$
 \begin{equation*}
-\log\left(\frac{p_i}{1-p_i}\right) = \beta_0 + \beta_1 \times orig\_ip\_bytes + \beta_3 \times proto
+\log\left(\frac{p_i}{1-p_i}\right) = \ -17.66528932 + \ 0.00112571 \times orig\_ip\_bytes + \ 20.06098491 \times protoudp
 \end{equation*}
-$$ 
+$$ \
+
+>Coefficient for prototcp is 20.06098491 this tells us that when the protocol is TCP (as opposed to ICMP), the likelihood of a malicious is 20.06098491 units higher than when the protocol is ICMP, while holding bytes sent from origin constant. 
 
 ### Cross Validation
 
@@ -390,3 +403,11 @@ auc(roc_obj)
 ```
 
 ## Conlusions and Reccommenadtions
+AUC is approximately 0.954, which is very close to 1, indicating that the model has excellent discriminative ability to distinguish between the malicious and benign requests.
+
+However this  result should be taken with a grain of salt  since the  data is  higly  skewed  with majority of Malicious attacks concentrated in the TCP protocol  while a majority of  benign attacks in the udp protocol.
+
+A better approach  to determine  the  efficiency of this model would be to use a more balanced dataset that distributes requests across the  protocols. Further effort to lemitize and stem  the IP addresses, Ports, History(Connections) would also help  in providing more insightful patterns on network traffic and improving the models  efficiency.
+
+Also different approaches  to discriminant analysis (instead of the cramer's correlation) and clustering (instead of logistic regression) would have  probably yielded different results.
+
